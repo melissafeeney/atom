@@ -5,8 +5,6 @@ const {Emitter, Disposable, CompositeDisposable} = require('event-kit')
 const fs = require('fs-plus')
 const {Directory} = require('pathwatcher')
 const Grim = require('grim')
-const DefaultDirectorySearcher = require('./default-directory-searcher')
-const RipgrepDirectorySearcher = require('./ripgrep-directory-searcher')
 const Dock = require('./dock')
 const Model = require('./model')
 const StateStore = require('./state-store')
@@ -204,8 +202,14 @@ module.exports = class Workspace extends Model {
     this.destroyedItemURIs = []
     this.stoppedChangingActivePaneItemTimeout = null
 
+    // We need to lazy-require the directory searchers to avoid having issues
+    // when creating the startup snapshots, due to the ripgrep binary.
+    const DefaultDirectorySearcher = require('./default-directory-searcher')
+    const RipgrepDirectorySearcher = require('./ripgrep-directory-searcher')
+
     this.scandalDirectorySearcher = new DefaultDirectorySearcher()
     this.ripgrepDirectorySearcher = new RipgrepDirectorySearcher()
+
     this.consumeServices(this.packageManager)
 
     this.paneContainers = {
